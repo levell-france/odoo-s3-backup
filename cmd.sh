@@ -26,5 +26,5 @@ else
     echo "Backup endpoint query failed"
 fi
 
-# Remove tempory file
+# Remove temporary file
 rm "$response_file"
