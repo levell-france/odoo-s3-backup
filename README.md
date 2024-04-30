@@ -2,7 +2,7 @@
 
 `odoo-s3-backup` is a simple Docker service to create a complete backup (DB and filestore) of any Odoo v17 plateform using the native function instead of using a plugin inside.
 
-It sends a `POST` query to the endpoint concerned. The main benefit is to launch backups from outside the platform to prevent missed executions.
+It sends a `POST` query to the endpoint concerned. The main benefit is to launch backups from outside the platform to prevent missed executions and keeping compatible format to use native restoration function.
 
 After creating the zip archive, it is sent to an S3 compatible bucket.
 
