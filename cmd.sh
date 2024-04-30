@@ -2,7 +2,7 @@
 
 # Check the mandatory environment variables
 if [ -z "$ODOO_URL" ] || [ -z "$ODOO_DB" ] || [ -z "$ODOO_MASTER_PWD" ] || [ -z "$S3_BUCKET" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
-    echo "Les variables d'environnement ODOO_URL, ODOO_DB, ODOO_MASTER_PWD, S3_BUCKET, AWS_SECRET_ACCESS_KEY et AWS_ACCESS_KEY_ID doivent être définies."
+    echo "The environment variables ODOO_URL, ODOO_DB, ODOO_MASTER_PWD, S3_BUCKET, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are mandatory!"
     exit 1
 fi
 
