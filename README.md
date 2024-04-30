@@ -18,7 +18,7 @@ ODOO_DB
 ODOO_MASTER_PWD
 ```
 
-Optional ones
+### Optional ones
 ```
 S3_ENDPOINT
 TZ # timezone, e.g. Europe/Paris 
