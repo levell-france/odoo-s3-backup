@@ -10,7 +10,7 @@ fi
 response_file=$(mktemp)
 
 # Make the POST request to the Odoo backup endpoint
-curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "master_pwd=$ODOO_MASTER_PWD&name=$ODOO_DB&backup_format=zip" -o "$response_file" "$ODOO_URL/web/database/backup"
+curl -v -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "master_pwd=$ODOO_MASTER_PWD&name=$ODOO_DB&backup_format=zip" -o "$response_file" "$ODOO_URL/web/database/backup"
 
 if [ $? -eq 0 ]; then
     filename="$(date +%Y-%m-%d-%H-%M-%S).zip"
