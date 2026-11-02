@@ -1,6 +1,6 @@
 FROM alpine:3.19
 
-RUN apk add curl tzdata
+RUN apk add --no-cache curl tzdata unzip ca-certificates
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
   --create-dirs \
   -o /usr/local/bin/mc
