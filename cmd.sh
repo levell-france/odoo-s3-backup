@@ -1,30 +1,57 @@
-#!/bin/sh
 
-# Check the mandatory environment variables
-if [ -z "$ODOO_URL" ] || [ -z "$ODOO_DB" ] || [ -z "$ODOO_MASTER_PWD" ] || [ -z "$S3_BUCKET" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_ACCESS_KEY_ID" ]; then
-    echo "The environment variables ODOO_URL, ODOO_DB, ODOO_MASTER_PWD, S3_BUCKET, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are mandatory!"
+#!/bin/sh
+set -eu
+
+# Check required environment variables
+for var in ODOO_URL ODOO_DB ODOO_MASTER_PWD \
+           S3_ENDPOINT S3_BUCKET \
+           AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+do
+    eval "value=\${$var:-}"
+    if [ -z "$value" ]; then
+        echo "ERROR: Missing environment variable: $var" >&2
+        exit 1
+    fi
+done
+
+# Create a temporary file for the backup archive
+response_file=$(mktemp)
+
+# Ensure the temporary file is removed on exit
+trap 'rm -f "$response_file"' EXIT
+trap 'exit 1' HUP INT TERM
+
+echo "Starting Odoo backup..."
+
+# Download the Odoo database backup
+curl --fail --silent --show-error \
+    --connect-timeout 30 \
+    --retry 3 \
+    --data-urlencode "master_pwd=$ODOO_MASTER_PWD" \
+    --data-urlencode "name=$ODOO_DB" \
+    --data-urlencode "backup_format=zip" \
+    --output "$response_file" \
+    "${ODOO_URL%/}/web/database/backup"
+
+# Verify the integrity of the ZIP archive
+if ! unzip -tqq "$response_file"; then
+    echo "ERROR: Invalid backup ZIP archive" >&2
     exit 1
 fi
 
-# Create a temporary file to get archive
-response_file=$(mktemp)
+# Generate a timestamped backup filename (UTC)
+filename="$(date -u +%Y-%m-%d-%H-%M-%S).zip"
 
-# Make the POST request to the Odoo backup endpoint
-curl -v -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "master_pwd=$ODOO_MASTER_PWD&name=$ODOO_DB&backup_format=zip" -o "$response_file" "$ODOO_URL/web/database/backup"
+# Configure the S3 connection
+mc alias set s3 \
+    "$S3_ENDPOINT" \
+    "$AWS_ACCESS_KEY_ID" \
+    "$AWS_SECRET_ACCESS_KEY" \
+    --api S3v4
 
-if [ $? -eq 0 ]; then
-    filename="$(date +%Y-%m-%d-%H-%M-%S).zip"
-    # Upload the archive to the S3 bucket
-    mc alias set s3 "$S3_ENDPOINT" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" --api S3v4
-    mc cp "$response_file" "s3/$S3_BUCKET/$filename"
-    if [ $? -eq 0 ]; then
-        echo "Archive successfully uploaded to S3 bucket"
-    else
-        echo "Error sending archive to S3"
-    fi
-else
-    echo "Backup endpoint query failed"
-fi
+# Upload the backup archive to the S3 bucket
+echo "Uploading backup to S3..."
 
-# Remove temporary file
-rm "$response_file"
+mc cp "$response_file" "s3/$S3_BUCKET/$filename"
+
+echo "SUCCESS: Backup uploaded to s3/$S3_BUCKET/$filename"
