@@ -1,4 +1,3 @@
-
 #!/bin/sh
 set -eu
 
@@ -40,19 +39,18 @@ if ! unzip -tqq "$response_file"; then
     exit 1
 fi
 
+echo "Backup ZIP verified successfully."
+
 # Generate a timestamped backup filename (UTC)
 filename="$(date -u +%Y-%m-%d-%H-%M-%S).zip"
 
-# Configure the S3 connection
-mc alias set s3 \
-    "$S3_ENDPOINT" \
-    "$AWS_ACCESS_KEY_ID" \
-    "$AWS_SECRET_ACCESS_KEY" \
-    --api S3v4
-
-# Upload the backup archive to the S3 bucket
+# Upload the backup archive to Scaleway S3
 echo "Uploading backup to S3..."
 
-mc cp "$response_file" "s3/$S3_BUCKET/$filename"
+AWS_DEFAULT_REGION=fr-par \
+aws --endpoint-url "$S3_ENDPOINT" \
+    s3 cp "$response_file" \
+    "s3://$S3_BUCKET/$filename" \
+    --no-progress
 
-echo "SUCCESS: Backup uploaded to s3/$S3_BUCKET/$filename"
+echo "SUCCESS: Backup uploaded to s3://$S3_BUCKET/$filename"
