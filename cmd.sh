@@ -26,6 +26,7 @@ echo "Starting Odoo backup..."
 # Download the Odoo database backup
 curl --fail --silent --show-error \
     --connect-timeout 30 \
+    --max-time 1800 \
     --retry 3 \
     --data-urlencode "master_pwd=$ODOO_MASTER_PWD" \
     --data-urlencode "name=$ODOO_DB" \
