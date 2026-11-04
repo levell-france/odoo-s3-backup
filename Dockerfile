@@ -1,4 +1,4 @@
-FROM alpine:3.19
+FROM alpine:3.24
 
 RUN apk add --no-cache curl tzdata unzip ca-certificates
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
@@ -7,4 +7,4 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
 RUN chmod +x /usr/local/bin/mc
 WORKDIR /app
 COPY cmd.sh cmd.sh
-CMD /bin/sh cmd.sh
+CMD ["/bin/sh", "cmd.sh"]
